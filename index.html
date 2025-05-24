@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scott Task Calendar</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      height: 100vh;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: #f4f4f4;
+      flex-direction: column;
+    }
+
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #1c2a3a;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 15px;
+      z-index: 1000;
+      border-bottom: 2px solid #394c5c;
+      align-items: center;
+    }
+
+    .top-nav button {
+      background: none;
+      color: #ffd54f;
+      border: none;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 10px 15px;
+      transition: background 0.3s;
+    }
+
+    .top-nav button:hover {
+      background-color: #263238;
+      border-radius: 6px;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      margin-top: 70px;
+    }
+
+    .sidebar {
+      width: 350px;
+      background-color: #243447;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      border-right: 3px solid #1e1e2f;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    #calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+      font-size: 20px;
+      color: #ffd54f;
+    }
+
+    #calendar-header button {
+      background: none;
+      border: none;
+      font-size: 22px;
+      color: #ffd54f;
+      cursor: pointer;
+    }
+
+    #calendar-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    #calendar-table th {
+      background-color: #546e7a;
+      color: white;
+      padding: 10px;
+    }
+
+    #calendar-table td {
+      background-color: #90caf9;
+      color: black;
+      text-align: center;
+      padding: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      border: 1px solid #bbdefb;
+    }
+
+    #calendar-table td:hover {
+      background-color: #64b5f6;
+    }
+
+    #calendar-table td.active {
+      background-color: #1565c0;
+      color: white;
+      font-weight: bold;
+    }
+
+    .nav-button {
+      background-color: #546e7a;
+      color: #fff;
+      border: none;
+      padding: 15px;
+      margin: 10px 0;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-button:hover {
+      background-color: #78909c;
+      transform: scale(1.05);
+    }
+
+    .main {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      background-color: #f0f4f8;
+      color: #222;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    input, select, textarea {
+      padding: 12px;
+      width: 100%;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 12px 18px;
+      background-color: #42a5f5;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: #e3f2fd;
+      margin-bottom: 10px;
+      padding: 15px;
+      border-radius: 6px;
+      color: #333;
+    }
+
+    .complete-btn {
+      background-color: #66bb6a;
+      margin-top: 10px;
+    }
+
+    .note {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .note-buttons { margin-top: 10px; }
+
+    .export-btn {
+      margin-top: 20px;
+      background-color: #ff9800;
+    }
+
+    #eastern-clock {
+      float: right;
+      font-size: 16px;
+      color: #333;
+    }
+
+    #dateTasks {
+      margin-top: 15px;
+      background: #455a64;
+      color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    #greeting {
+      font-size: 16px;
+      color: #ffd54f;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <button onclick="showSection('create')">🏠 Home</button>
+    <button onclick="showSection('mytasks')">📌 Tasks</button>
+    <button onclick="showSection('completed')">✅ Completed</button>
+    <button onclick="showSection('notes')">🗒️ Notes</button>
+    <button onclick="setBedTime()">🕒 Bed Time 12:00 AM</button>
+    <span id="greeting"></span>
+  </nav>
+
+  <!-- Layout -->
+  <div class="container">
+    <div class="sidebar">
+      <h2>📅 Scott Task</h2>
+      <div id="calendar-header">
+        <button onclick="changeMonth(-1)">◀</button>
+        <div id="calendar-month"></div>
+        <button onclick="changeMonth(1)">▶</button>
+      </div>
+      <table id="calendar-table"></table>
+      <div id="dateTasks">Click a date to view tasks.</div>
+      <button class="nav-button" onclick="showSection('create')">📝 Create a Task</button>
+      <button class="nav-button" onclick="showSection('mytasks')">📌 My Tasks</button>
+      <button class="nav-button" onclick="showSection('completed')">✅ Completed Tasks</button>
+      <button class="nav-button" onclick="showSection('notes')">🗒️ Notes</button>
+      <button class="nav-button export-btn" onclick="exportTasks()">📤 Export Tasks</button>
+    </div>
+
+    <div class="main">
+      <div id="create" class="section active">
+        <h2>Create a Task <span id="eastern-clock"></span></h2>
+        <form id="taskForm">
+          <input type="text" id="title" placeholder="Task Title" required />
+          <input type="date" id="date" required />
+          <input type="time" id="time" required />
+          <input type="number" id="duration" placeholder="Duration (minutes)" required />
+          <label for="recurrence">Recurring:</label>
+          <select id="recurrence">
+            <option value="none">None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+          <button type="submit">Add Task</button>
+        </form>
+      </div>
+
+      <div id="mytasks" class="section"><h2>My Tasks</h2><ul id="taskList"></ul></div>
+      <div id="completed" class="section"><h2>Completed Tasks</h2><ul id="completedList"></ul></div>
+      <div id="notes" class="section">
+        <h2>Notes</h2>
+        <textarea id="noteInput" placeholder="Write your note..."></textarea>
+        <button onclick="saveNote()">Save Note</button>
+        <div id="notesList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+    const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const notes = JSON.parse(localStorage.getItem('notes') || '[]');
+
+    function updateEasternClock() {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const est = new Date(utc + (3600000 * -4));
+      document.getElementById("eastern-clock").textContent = est.toLocaleTimeString('en-US', { timeZone: 'America/New_York' });
+    }
+    setInterval(updateEasternClock, 1000);
+    updateEasternClock();
+
+    function updateGreeting() {
+      const hour = new Date().getHours();
+      let greeting = "";
+
+      if (hour >= 0 && hour < 6) {
+        greeting = "🌙 Good night";
+      } else if (hour >= 6 && hour < 12) {
+        greeting = "☀️ Good morning";
+      } else {
+        greeting = "";
+      }
+
+      document.getElementById("greeting").textContent = greeting;
+    }
+    setInterval(updateGreeting, 1000);
+    updateGreeting();
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if (id === 'mytasks') renderTasks();
+      if (id === 'completed') renderCompleted();
+      if (id === 'notes') renderNotes();
+    }
+
+    function changeMonth(offset) {
+      currentMonth += offset;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      } else if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const table = document.getElementById('calendar-table');
+      const monthEl = document.getElementById('calendar-month');
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const monthName = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' });
+
+      monthEl.textContent = `${monthName} ${currentYear}`;
+      table.innerHTML = '<tr>' + ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<th>${d}</th>`).join('') + '</tr>';
+
+      let row = '<tr>';
+      for (let i = 0; i < firstDay; i++) row += '<td></td>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        if ((firstDay + d - 1) % 7 === 0 && d !== 1) row += '</tr><tr>';
+        row += `<td data-date="${dateStr}">${d}</td>`;
+      }
+      row += '</tr>';
+      table.innerHTML += row;
+
+      table.querySelectorAll('td[data-date]').forEach(td => {
+        td.addEventListener('click', () => {
+          table.querySelectorAll('td.active').forEach(active => active.classList.remove('active'));
+          td.classList.add('active');
+          showTasksForDate(td.dataset.date);
+        });
+      });
+    }
+
+    function showTasksForDate(date) {
+      const div = document.getElementById('dateTasks');
+      const match = tasks.filter(t => t.date === date && !t.completed);
+      div.innerHTML = `<strong>Tasks on ${date}</strong><br>` +
+        (match.length ? match.map(t => `• ${t.title} at ${t.time}`).join('<br>') : 'No tasks.');
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('taskList');
+      list.innerHTML = '';
+      tasks.filter(t => !t.completed).forEach(task => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${task.title}</strong><br>${task.date} at ${task.time}<br><button class="complete-btn" onclick="markCompleted(${task.id})">Done</button>`;
+        list.appendChild(li);
+      });
+    }
+
+    function renderCompleted() {
+      const list = document.getElementById('completedList');
+      list.innerHTML = '';
+      tasks.filter(t => t.completed).forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = `${t.title} — ${t.date} ${t.time}`;
+        list.appendChild(li);
+      });
+    }
+
+    function markCompleted(id) {
+      const task = tasks.find(t => t.id === id);
+      task.completed = true;
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderTasks();
+      renderCompleted();
+    }
+
+    function saveNote() {
+      const content = document.getElementById('noteInput').value.trim();
+      if (content) {
+        notes.push({ id: Date.now(), content });
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotes();
+        document.getElementById('noteInput').value = '';
+      }
+    }
+
+    function renderNotes() {
+      const div = document.getElementById('notesList');
+      div.innerHTML = '';
+      notes.forEach(n => {
+        const el = document.createElement('div');
+        el.className = 'note';
+        el.innerHTML = `${n.content}<div class="note-buttons"><button onclick="deleteNote(${n.id})">Delete</button></div>`;
+        div.appendChild(el);
+      });
+    }
+
+    function deleteNote(id) {
+      const index = notes.findIndex(n => n.id === id);
+      if (index !== -1) {
+        notes.splice(index, 1);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotes();
+      }
+    }
+
+    function exportTasks() {
+      const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "scott_tasks.json";
+      link.click();
+    }
+
+    function setBedTime() {
+      const timeStr = prompt("Enter your bedtime (HH:MM AM/PM):", "12:00 AM");
+      if (!timeStr) return;
+
+      const now = new Date();
+      const [hms, meridian] = timeStr.split(' ');
+      let [hour, minute] = hms.split(':').map(Number);
+
+      if (meridian.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+      if (meridian.toUpperCase() === 'AM' && hour === 12) hour = 0;
+
+      const alarmTime = new Date(now);
+      alarmTime.setHours(hour, minute, 0, 0);
+
+      if (alarmTime < now) alarmTime.setDate(alarmTime.getDate() + 1);
+
+      const delay = alarmTime - now;
+
+      setTimeout(() => {
+        alert("⏰ It's your bedtime!");
+      }, delay);
+
+      alert(`Bedtime alarm set for ${alarmTime.toLocaleTimeString()}`);
+    }
+
+    document.getElementById('taskForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const id = Date.now();
+      const title = document.getElementById('title').value;
+      const date = document.getElementById('date').value;
+      const time = document.getElementById('time').value;
+      const duration = document.getElementById('duration').value;
+      const recurrence = document.getElementById('recurrence').value;
+      tasks.push({ id, title, date, time, duration, recurrence, completed: false });
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      e.target.reset();
+      alert("Task added!");
+    });
+
+    renderCalendar();
+  </script>
+</body>
+</html>
